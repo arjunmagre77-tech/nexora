@@ -3,9 +3,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useWorkspace, Notification } from "@/context/WorkspaceContext";
 import { 
-  Bell, Search, Plus, Menu, X, FileText, CheckCircle, 
-  AlertTriangle, Info, Check, Trash2, LayoutDashboard,
-  Calendar, Kanban, Target, Handshake, Folder, Sparkles, Settings
+  Bell, 
+  Search, 
+  Plus, 
+  Sun, 
+  Moon, 
+  ChevronDown, 
+  CheckCircle, 
+  AlertTriangle, 
+  Info, 
+  Check, 
+  Trash2, 
+  Menu, 
+  X,
+  FileText,
+  Calendar,
+  Sparkles,
+  LogOut,
+  Settings
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,6 +29,7 @@ export const Navbar: React.FC = () => {
     activeTab, 
     setActiveTab, 
     user, 
+    logout,
     notifications, 
     markNotificationRead, 
     markAllNotificationsRead, 
@@ -26,10 +42,13 @@ export const Navbar: React.FC = () => {
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
 
   const notifRef = useRef<HTMLDivElement>(null);
   const createRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -40,6 +59,9 @@ export const Navbar: React.FC = () => {
       if (createRef.current && !createRef.current.contains(event.target as Node)) {
         setCreateOpen(false);
       }
+      if (userRef.current && !userRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -48,6 +70,10 @@ export const Navbar: React.FC = () => {
   if (!user) return null;
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const toggleTheme = () => {
+    setThemeMode(prev => (prev === "dark" ? "light" : "dark"));
+  };
 
   const getNotifIcon = (type: Notification["type"]) => {
     switch (type) {
@@ -58,86 +84,213 @@ export const Navbar: React.FC = () => {
       case "danger":
         return <AlertTriangle className="h-4 w-4 text-[#EF4444]" />;
       default:
-        return <Info className="h-4 w-4 text-[#6C63FF]" />;
+        return <Info className="h-4 w-4 text-[#6366F1]" />;
     }
   };
 
-  const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard },
-    { name: "Content", icon: FileText },
-    { name: "Calendar", icon: Calendar },
-    { name: "Kanban", icon: Kanban },
-    { name: "Notes", icon: FileText },
-    { name: "Analytics", icon: Target },
-    { name: "Sponsors", icon: Handshake },
-    { name: "Goals", icon: Target },
-    { name: "Assets", icon: Folder },
-    { name: "AI Assistant", icon: Sparkles },
-    { name: "Settings", icon: Settings },
-  ];
-
   return (
-    <header className="h-16 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-md flex items-center justify-between px-4 md:px-6 w-full relative z-10 shrink-0">
-      {/* Mobile Menu Toggle & Title */}
-      <div className="flex items-center gap-3">
+    <header className="h-16 border-b border-[#171E31] bg-[#0B0F19] flex items-center justify-between px-6 w-full relative z-10 shrink-0 select-none">
+      {/* Mobile Menu Button & Brand indicator */}
+      <div className="flex items-center gap-3 md:hidden">
         <button 
           onClick={() => setMobileMenuOpen(true)}
-          className="md:hidden p-1.5 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+          className="p-1.5 rounded-lg hover:bg-white/[0.05] text-zinc-400 hover:text-zinc-200"
         >
           <Menu className="h-5 w-5" />
         </button>
-        
-        <div className="flex items-center gap-2">
-          {/* Decorative pulse glow on title */}
-          <span className="h-2 w-2 rounded-full bg-[#6C63FF] hidden md:inline-block shadow-[0_0_10px_rgba(108,99,255,0.8)] animate-pulse"></span>
-          <h1 className="text-base font-bold text-zinc-100 tracking-tight">{activeTab}</h1>
-        </div>
+        <span className="text-sm font-bold text-white">Nexora</span>
       </div>
 
-      {/* Center Search Bar */}
-      <div className="hidden sm:flex max-w-md w-full mx-4">
-        <button
+      {/* Center/Left Search Input */}
+      <div className="flex-1 max-w-sm">
+        <div 
           onClick={() => setIsCommandPaletteOpen(true)}
-          className="flex items-center justify-between w-full px-3 py-1.5 rounded-lg bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-zinc-400 text-xs transition-all text-left"
+          className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#11182B] border border-[#1E293B] text-zinc-400 hover:text-zinc-300 hover:border-zinc-700 text-xs cursor-pointer transition-all shadow-inner"
         >
-          <div className="flex items-center gap-2">
-            <Search className="h-3.5 w-3.5" />
-            <span>Search or run actions...</span>
-          </div>
-          <kbd className="hidden md:inline-block px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-950 font-mono text-[9px] text-zinc-500 uppercase tracking-wider">
-            Ctrl + K
-          </kbd>
-        </button>
+          <Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+          <span className="truncate">Search anything...</span>
+        </div>
       </div>
 
       {/* Right Controls */}
       <div className="flex items-center gap-3">
-        {/* Search trigger for mobile */}
+        {/* Notifications Icon Button */}
+        <div ref={notifRef} className="relative">
+          <button
+            onClick={() => setNotifOpen(!notifOpen)}
+            className="p-2 rounded-xl hover:bg-white/[0.05] text-zinc-400 hover:text-zinc-200 relative transition-colors"
+            title="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#EF4444] shadow-[0_0_6px_#EF4444]"></span>
+            )}
+          </button>
+
+          {/* Notifications Dropdown */}
+          <AnimatePresence>
+            {notifOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-80 rounded-2xl border border-[#1E293B] bg-[#11182B] shadow-2xl backdrop-blur-xl z-30 overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b border-[#1E293B] flex items-center justify-between bg-[#0B0F19]/60">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-white">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-400 font-semibold">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={markAllNotificationsRead}
+                        className="text-[10px] text-indigo-400 hover:underline flex items-center gap-1 font-medium"
+                      >
+                        <Check className="h-3 w-3" />
+                        <span>Mark all read</span>
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button 
+                        onClick={clearNotifications}
+                        className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto divide-y divide-[#1E293B]/60 scrollbar-thin">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-xs text-zinc-500">
+                      No notifications yet.
+                    </div>
+                  ) : (
+                    notifications.map((noti) => (
+                      <div 
+                        key={noti.id} 
+                        className={`p-3 text-left transition-colors hover:bg-white/[0.03] ${
+                          !noti.read ? "bg-indigo-500/[0.05]" : ""
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <span className="mt-0.5 shrink-0">{getNotifIcon(noti.type)}</span>
+                          <div className="flex-1 min-w-0">
+                            <h4 className={`text-xs ${!noti.read ? "font-semibold text-zinc-200" : "font-normal text-zinc-400"}`}>
+                              {noti.title}
+                            </h4>
+                            <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{noti.description}</p>
+                            <span className="text-[9px] text-zinc-600 block mt-1">
+                              {new Date(noti.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                          </div>
+                          {!noti.read && (
+                            <button
+                              onClick={() => markNotificationRead(noti.id)}
+                              className="text-zinc-500 hover:text-zinc-300 p-0.5 rounded transition-colors shrink-0"
+                              title="Mark as read"
+                            >
+                              <Check className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Theme Toggle Button */}
         <button
-          onClick={() => setIsCommandPaletteOpen(true)}
-          className="sm:hidden p-2 rounded-lg hover:bg-zinc-900 text-zinc-400"
+          onClick={toggleTheme}
+          className="p-2 rounded-xl hover:bg-white/[0.05] text-zinc-400 hover:text-zinc-200 transition-colors"
+          title="Toggle Theme"
         >
-          <Search className="h-4 w-4" />
+          <Sun className="h-4 w-4" />
         </button>
 
-        {/* Quick Create Dropdown */}
+        {/* User Profile Chip: [AM] Alex Mercer v */}
+        <div ref={userRef} className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-white/[0.05] transition-colors"
+          >
+            <div className="h-7 w-7 rounded-full bg-[#3B82F6] flex items-center justify-center font-bold text-white text-xs shadow-sm">
+              AM
+            </div>
+            <span className="text-xs font-semibold text-zinc-200 hidden sm:inline">
+              Alex Mercer
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+          </button>
+
+          <AnimatePresence>
+            {userMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-48 rounded-xl border border-[#1E293B] bg-[#11182B] shadow-2xl backdrop-blur-xl z-30 p-1"
+              >
+                <div className="px-3 py-2 border-b border-[#1E293B]/80">
+                  <p className="text-xs font-semibold text-zinc-200">Alex Mercer</p>
+                  <p className="text-[10px] text-zinc-500 truncate">{user.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setActiveTab("Settings");
+                  }}
+                  className="flex items-center gap-2 w-full p-2 text-xs text-zinc-300 hover:bg-white/[0.06] rounded-lg transition-colors mt-1"
+                >
+                  <Settings className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Account Settings</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    logout();
+                  }}
+                  className="flex items-center gap-2 w-full p-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Log Out</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Primary "+ Create" Button with Dropdown Chevron */}
         <div ref={createRef} className="relative">
           <button
             onClick={() => setCreateOpen(!createOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#8B5CF6] hover:from-[#5b52f0] hover:to-[#7c4df2] text-white shadow-md shadow-[#6C63FF]/20 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:from-[#4338CA] hover:to-[#4F46E5] text-white text-xs font-semibold shadow-md shadow-indigo-600/30 active:scale-95 transition-all"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Create</span>
+            <span>Create</span>
+            <ChevronDown className="h-3.5 w-3.5 ml-0.5 text-indigo-200" />
           </button>
 
           <AnimatePresence>
             {createOpen && (
               <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-48 p-1 rounded-lg border border-zinc-800 bg-zinc-900/95 shadow-xl backdrop-blur-xl z-20"
+                className="absolute right-0 mt-2 w-52 p-1 rounded-xl border border-[#1E293B] bg-[#11182B] shadow-2xl backdrop-blur-xl z-30"
               >
                 <button
                   onClick={() => {
@@ -157,10 +310,10 @@ export const Navbar: React.FC = () => {
                     });
                     setActiveTab("Content");
                   }}
-                  className="flex items-center gap-2.5 w-full p-2 text-left text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 rounded-md transition-colors"
+                  className="flex items-center gap-2.5 w-full p-2.5 text-left text-xs font-medium text-zinc-300 hover:bg-white/[0.06] hover:text-white rounded-lg transition-colors"
                 >
-                  <Plus className="h-3.5 w-3.5 text-[#6C63FF]" />
-                  <span>Create Idea / Video</span>
+                  <Plus className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>Create Content Card</span>
                 </button>
                 
                 <button
@@ -174,10 +327,10 @@ export const Navbar: React.FC = () => {
                     });
                     setActiveTab("Notes");
                   }}
-                  className="flex items-center gap-2.5 w-full p-2 text-left text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 rounded-md transition-colors"
+                  className="flex items-center gap-2.5 w-full p-2.5 text-left text-xs font-medium text-zinc-300 hover:bg-white/[0.06] hover:text-white rounded-lg transition-colors"
                 >
-                  <Plus className="h-3.5 w-3.5 text-[#22C55E]" />
-                  <span>Create Note</span>
+                  <FileText className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Create Note / Script</span>
                 </button>
 
                 <button
@@ -194,116 +347,16 @@ export const Navbar: React.FC = () => {
                       nextFollowUp: new Date().toISOString().split("T")[0],
                       notes: ""
                     });
-                    setActiveTab("Sponsors");
+                    setActiveTab("Brand Deals");
                   }}
-                  className="flex items-center gap-2.5 w-full p-2 text-left text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 rounded-md transition-colors"
+                  className="flex items-center gap-2.5 w-full p-2.5 text-left text-xs font-medium text-zinc-300 hover:bg-white/[0.06] hover:text-white rounded-lg transition-colors"
                 >
-                  <Plus className="h-3.5 w-3.5 text-[#F59E0B]" />
-                  <span>Add Sponsor Lead</span>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Add Brand Deal Lead</span>
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Notifications Center */}
-        <div ref={notifRef} className="relative">
-          <button
-            onClick={() => setNotifOpen(!notifOpen)}
-            className="p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 relative transition-all"
-          >
-            <Bell className="h-4 w-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#EF4444] text-[9px] font-bold text-white flex items-center justify-center border border-zinc-950 animate-pulse">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          <AnimatePresence>
-            {notifOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-80 rounded-xl border border-zinc-800 bg-zinc-900/95 shadow-xl backdrop-blur-xl z-20 overflow-hidden"
-              >
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/40">
-                  <h3 className="text-xs font-bold text-zinc-200">Notifications</h3>
-                  <div className="flex gap-2">
-                    {unreadCount > 0 && (
-                      <button 
-                        onClick={markAllNotificationsRead}
-                        className="text-[10px] text-[#6C63FF] hover:underline flex items-center gap-0.5 font-medium"
-                      >
-                        <Check className="h-3 w-3" />
-                        <span>Read All</span>
-                      </button>
-                    )}
-                    {notifications.length > 0 && (
-                      <button 
-                        onClick={clearNotifications}
-                        className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5 font-medium"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        <span>Clear</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Notifications List */}
-                <div className="max-h-[300px] overflow-y-auto divide-y divide-zinc-800">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-8 text-center text-xs text-zinc-500">
-                      No notifications yet.
-                    </div>
-                  ) : (
-                    notifications.map((noti) => (
-                      <div 
-                        key={noti.id} 
-                        className={`p-3 text-left transition-colors relative hover:bg-zinc-800/40 ${
-                          !noti.read ? "bg-[#6C63FF]/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-0.5">{getNotifIcon(noti.type)}</span>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`text-xs ${!noti.read ? "font-semibold text-zinc-200" : "font-normal text-zinc-400"}`}>
-                              {noti.title}
-                            </h4>
-                            <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">{noti.description}</p>
-                            <span className="text-[9px] text-zinc-600 block mt-1">
-                              {new Date(noti.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            </span>
-                          </div>
-                          {!noti.read && (
-                            <button
-                              onClick={() => markNotificationRead(noti.id)}
-                              className="text-zinc-600 hover:text-zinc-400 p-0.5 rounded transition-colors shrink-0"
-                              title="Mark as read"
-                            >
-                              <Check className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Small avatar display for navbar */}
-        <div 
-          onClick={() => setActiveTab("Settings")}
-          className="h-8 w-8 rounded-full border border-zinc-800 cursor-pointer overflow-hidden hover:opacity-80 transition-all shrink-0"
-        >
-          <img src={user.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
         </div>
       </div>
 
@@ -311,29 +364,26 @@ export const Navbar: React.FC = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-[#09090B]/80 backdrop-blur-md z-40 md:hidden"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 md:hidden"
             />
-            {/* Drawer */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 bottom-0 left-0 w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col z-50 md:hidden"
+              className="fixed top-0 bottom-0 left-0 w-64 bg-[#0B0F19] border-r border-[#171E31] flex flex-col z-50 md:hidden p-4"
             >
-              {/* Header */}
-              <div className="p-4 border-b border-zinc-900 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded bg-gradient-to-tr from-[#6C63FF] to-[#8B5CF6] flex items-center justify-center font-bold text-white text-xs">
+              <div className="flex items-center justify-between pb-4 border-b border-[#171E31]">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center font-bold text-white text-xs">
                     N
                   </div>
-                  <span className="text-sm font-bold text-zinc-100">Nexora Studio</span>
+                  <span className="text-base font-bold text-white">Nexora</span>
                 </div>
                 <button 
                   onClick={() => setMobileMenuOpen(false)}
@@ -343,42 +393,27 @@ export const Navbar: React.FC = () => {
                 </button>
               </div>
 
-              {/* Navigation */}
-              <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-                {menuItems.map((item) => {
-                  const isSelected = activeTab === item.name;
-                  return (
-                    <button
-                      key={item.name}
-                      onClick={() => {
-                        setActiveTab(item.name);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                        isSelected 
-                          ? "bg-zinc-900 text-[#6C63FF] border border-zinc-800" 
-                          : "text-zinc-400 hover:bg-zinc-900/30 hover:text-zinc-200"
-                      }`}
-                    >
-                      <item.icon className={`h-4 w-4 ${isSelected ? "text-[#6C63FF]" : "text-zinc-500"}`} />
-                      <span>{item.name}</span>
-                    </button>
-                  );
-                })}
+              <nav className="flex-1 py-4 space-y-1 overflow-y-auto">
+                {[
+                  "Dashboard", "Analytics", "Content", "Audience", 
+                  "Monetization", "Brand Deals", "Calendar", "Tools", "Resources", "Settings"
+                ].map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => {
+                      setActiveTab(name);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center w-full px-3 py-2 rounded-xl text-xs font-medium ${
+                      activeTab === name
+                        ? "bg-[#4338CA] text-white"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
               </nav>
-
-              {/* Footer Profile */}
-              <div className="p-4 border-t border-zinc-900 flex items-center gap-2">
-                <img 
-                  src={user.avatarUrl} 
-                  alt={user.fullName}
-                  className="h-8 w-8 rounded-full border border-zinc-800 object-cover" 
-                />
-                <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-semibold text-zinc-200 truncate">{user.fullName}</h5>
-                  <p className="text-[9px] text-zinc-500 truncate">{user.email}</p>
-                </div>
-              </div>
             </motion.div>
           </>
         )}

@@ -69,12 +69,18 @@ export default function Home() {
         return <NotesView />;
       case "Analytics":
         return <AnalyticsView />;
+      case "Audience":
+        return <GoalsView />;
+      case "Monetization":
+      case "Brand Deals":
       case "Sponsors":
         return <SponsorsView />;
       case "Goals":
         return <GoalsView />;
+      case "Resources":
       case "Assets":
         return <AssetView />;
+      case "Tools":
       case "AI Assistant":
         return <AIAssistantView />;
       case "Settings":
@@ -85,7 +91,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#09090B] text-[#F4F4F5] font-sans antialiased">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0B0F19] text-[#F4F4F5] font-sans antialiased">
       {/* Sidebar Navigation */}
       <Sidebar />
 
