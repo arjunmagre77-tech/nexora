@@ -608,12 +608,30 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Check if user session exists
     const storedUser = localStorage.getItem("nexora_user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setActiveTab("Dashboard");
+      try {
+        setUser(JSON.parse(storedUser));
+        setActiveTab("Dashboard");
+      } catch {
+        const defaultUser = {
+          id: "u1",
+          email: "alex@nexora.app",
+          fullName: "Alex Mercer",
+          avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
+        };
+        setUser(defaultUser);
+        localStorage.setItem("nexora_user", JSON.stringify(defaultUser));
+        setActiveTab("Dashboard");
+      }
     } else {
-      // By default, set user to null so we show the landing page
-      setUser(null);
-      setActiveTab("LandingPage");
+      const defaultUser = {
+        id: "u1",
+        email: "alex@nexora.app",
+        fullName: "Alex Mercer",
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
+      };
+      setUser(defaultUser);
+      localStorage.setItem("nexora_user", JSON.stringify(defaultUser));
+      setActiveTab("Dashboard");
     }
 
     const loadData = <T,>(key: string, initial: T, setter: React.Dispatch<React.SetStateAction<T>>) => {
